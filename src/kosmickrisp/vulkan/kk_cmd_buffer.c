@@ -112,6 +112,7 @@ kk_reset_cmd_buffer(struct vk_command_buffer *vk_cmd_buffer,
    kk_cmd_release_resources(dev, cmd);
 
    memset(&cmd->state, 0, sizeof(cmd->state));
+   cmd->uses_heap = false;
 }
 
 const struct vk_command_buffer_ops kk_cmd_buffer_ops = {
