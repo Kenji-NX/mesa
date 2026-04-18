@@ -226,6 +226,7 @@ kk_get_device_features(
       .shaderStorageImageReadWithoutFormat = true,
       .shaderStorageImageWriteWithoutFormat = true,
       .shaderUniformBufferArrayDynamicIndexing = true,
+      .tessellationShader = true,
       .textureCompressionASTC_LDR = true,
       .textureCompressionBC = true,
       .textureCompressionETC2 = true,
