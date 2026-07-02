@@ -805,7 +805,7 @@ lookup_ycbcr_conversion(const void *_state, uint32_t set,
           &sampler->vk.ycbcr_conversion->state : NULL;
 }
 
-static int
+static unsigned
 glsl_type_size(const struct glsl_type *type, bool bindless)
 {
    return glsl_count_attribute_slots(type, false);

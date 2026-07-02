@@ -1745,7 +1745,7 @@ ntr_emit_impl(struct ntr_compile *c, nir_function_impl *impl)
    c->liveness = NULL;
 }
 
-static int
+static unsigned
 type_size(const struct glsl_type *type, bool bindless)
 {
    return glsl_count_attribute_slots(type, false);

@@ -103,7 +103,7 @@ const nir_shader_compiler_options *pco_nir_options(void)
  * \param[in] bindless Whether the access is bindless.
  * \return The size.
  */
-static int glsl_type_size(const struct glsl_type *type, UNUSED bool bindless)
+static unsigned glsl_type_size(const struct glsl_type *type, UNUSED bool bindless)
 {
    return glsl_count_attribute_slots(type, false);
 }

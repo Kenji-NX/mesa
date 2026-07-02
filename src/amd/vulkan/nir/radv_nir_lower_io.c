@@ -15,7 +15,7 @@
 #include "radv_physical_device.h"
 #include "radv_shader.h"
 
-static int
+static unsigned
 type_size_vec4(const struct glsl_type *type, bool bindless)
 {
    return glsl_count_attribute_slots(type, false);
