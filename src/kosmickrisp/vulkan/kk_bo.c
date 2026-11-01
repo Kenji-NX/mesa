@@ -13,10 +13,10 @@
 
 #include "util/u_memory.h"
 
-#if DETECT_OS_APPLE
+#if DETECT_OS_APPLE && TARGET_OS_OSX
 #include <mach/mach_init.h>
 #include <mach/mach_vm.h>
-#endif /* DETECT_OS_APPLE */
+#endif /* DETECT_OS_APPLE && TARGET_OS_OSX */
 
 VkResult
 kk_alloc_bo(struct kk_device *dev, struct vk_object_base *log_obj,
@@ -99,7 +99,7 @@ kk_destroy_bo(struct kk_device *dev, struct kk_bo *bo)
 VkResult
 kk_bo_map_placed(struct kk_device *dev, struct kk_bo *bo, void **addr)
 {
-#if DETECT_OS_APPLE
+#if DETECT_OS_APPLE && TARGET_OS_OSX
    mach_vm_address_t src_addr = (mach_vm_address_t)bo->cpu;
    mach_vm_address_t dst_addr = (mach_vm_address_t)*addr;
 
@@ -122,7 +122,7 @@ kk_bo_map_placed(struct kk_device *dev, struct kk_bo *bo, void **addr)
                        "mach_vm_remap failed: %d", ret);
 
    *addr = (void *)dst_addr;
-#endif /* DETECT_OS_APPLE */
+#endif /* DETECT_OS_APPLE && TARGET_OS_OSX */
 
    return VK_SUCCESS;
 }
@@ -130,7 +130,7 @@ kk_bo_map_placed(struct kk_device *dev, struct kk_bo *bo, void **addr)
 VkResult
 kk_bo_unmap(struct kk_device *dev, struct kk_bo *bo, void *addr, bool reserved)
 {
-#if DETECT_OS_APPLE
+#if DETECT_OS_APPLE && TARGET_OS_OSX
    mach_vm_address_t unmap_addr = (mach_vm_address_t)addr;
    if (reserved) {
       /* Replace with a reserved mapping using mach_vm_map */
@@ -146,7 +146,7 @@ kk_bo_unmap(struct kk_device *dev, struct kk_bo *bo, void *addr, bool reserved)
        * flag is set, so ignore the result */
       mach_vm_deallocate(mach_task_self(), unmap_addr, bo->size_B);
    }
-#endif /* DETECT_OS_APPLE */
+#endif /* DETECT_OS_APPLE && TARGET_OS_OSX */
 
    return VK_SUCCESS;
 }
