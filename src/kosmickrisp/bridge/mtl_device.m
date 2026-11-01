@@ -21,6 +21,7 @@ mtl_device_create()
    mtl_device *device = nil;
 
    @autoreleasepool {
+#if TARGET_OS_OSX
       NSArray<id<MTLDevice>> *devs = [MTLCopyAllDevices() autorelease];
       uint32_t device_count = [devs count];
       
@@ -30,6 +31,15 @@ mtl_device_create()
             break;
          }
       }
+#else
+       id<MTLDevice> default_dev = MTLCreateSystemDefaultDevice();
+       if (default_dev) {
+           if ([default_dev supportsFamily:MTLGPUFamilyMetal4])
+               device = (mtl_device *)default_dev;
+           else
+               [default_dev release];
+       }
+#endif
    }
 
    return device;

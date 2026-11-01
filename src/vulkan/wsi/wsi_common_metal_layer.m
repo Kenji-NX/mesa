@@ -139,7 +139,12 @@ void
 wsi_metal_layer_set_immediate(const CAMetalLayer *metal_layer,
                               bool enable_immediate)
 {
-   metal_layer.displaySyncEnabled = !enable_immediate;
+#if TARGET_OS_OSX
+    metal_layer.displaySyncEnabled = !enable_immediate;
+#else
+    (void)metal_layer;
+    (void)enable_immediate;
+#endif
 }
 
 VkResult
@@ -170,7 +175,11 @@ wsi_metal_layer_configure(const CAMetalLayer *metal_layer,
       metal_layer.maximumDrawableCount = image_count;
       metal_layer.drawableSize = (CGSize){.width = width, .height = height};
       metal_layer.opaque = enable_opaque;
-      metal_layer.displaySyncEnabled = !enable_immediate;
+#if TARGET_OS_OSX
+       metal_layer.displaySyncEnabled = !enable_immediate;
+#else
+       (void)enable_immediate;
+#endif
       metal_layer.pixelFormat = metal_format;
 
       metal_layer.colorspace = cg_color_space;
@@ -374,7 +383,8 @@ wsi_metal_layer_make_queue_resident(const CAMetalLayer *metal_layer,
    void *mtl4_command_queue)
 {
 /* Metal4 was introduced in macOS26 */
-#if defined(MAC_OS_VERSION_26_0) && __MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_VERSION_26_0
+#if defined(MAC_OS_VERSION_26_0) && __MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_VERSION_26_0 || \
+    (defined(__IPHONE_26_0) && __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_26_0)
    @autoreleasepool {
       id<MTL4CommandQueue> queue = (id<MTL4CommandQueue>)mtl4_command_queue;
       [queue addResidencySet:metal_layer.residencySet];
@@ -388,7 +398,8 @@ wsi_metal_layer_remove_queue_resident(const CAMetalLayer *metal_layer,
    void *mtl4_command_queue)
 {
 /* Metal4 was introduced in macOS26 */
-#if defined(MAC_OS_VERSION_26_0) && __MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_VERSION_26_0
+#if defined(MAC_OS_VERSION_26_0) && __MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_VERSION_26_0 || \
+    (defined(__IPHONE_26_0) && __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_26_0)
    @autoreleasepool {
       id<MTL4CommandQueue> queue = (id<MTL4CommandQueue>)mtl4_command_queue;
       [queue removeResidencySet:metal_layer.residencySet];
