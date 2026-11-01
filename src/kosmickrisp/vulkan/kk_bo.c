@@ -13,10 +13,22 @@
 
 #include "util/u_memory.h"
 
-#if DETECT_OS_APPLE && TARGET_OS_OSX
+#if DETECT_OS_APPLE
 #include <mach/mach_init.h>
+#endif /* DETECT_OS_APPLE */
+#if TARGET_OS_OSX
 #include <mach/mach_vm.h>
-#endif /* DETECT_OS_APPLE && TARGET_OS_OSX */
+typedef mach_vm_address_t kk_vm_addr_t;
+#define kk_vm_remap      mach_vm_remap
+#define kk_vm_map        mach_vm_map
+#define kk_vm_deallocate mach_vm_deallocate
+#else
+#include <mach/vm_map.h>
+typedef vm_address_t kk_vm_addr_t;
+#define kk_vm_remap      vm_remap
+#define kk_vm_map        vm_map
+#define kk_vm_deallocate vm_deallocate
+#endif /* TARGET_OS_OSX */
 
 VkResult
 kk_alloc_bo(struct kk_device *dev, struct vk_object_base *log_obj,
@@ -99,9 +111,9 @@ kk_destroy_bo(struct kk_device *dev, struct kk_bo *bo)
 VkResult
 kk_bo_map_placed(struct kk_device *dev, struct kk_bo *bo, void **addr)
 {
-#if DETECT_OS_APPLE && TARGET_OS_OSX
-   mach_vm_address_t src_addr = (mach_vm_address_t)bo->cpu;
-   mach_vm_address_t dst_addr = (mach_vm_address_t)*addr;
+#if DETECT_OS_APPLE
+   kk_vm_addr_t src_addr = (kk_vm_addr_t)bo->cpu;
+   kk_vm_addr_t dst_addr = (kk_vm_addr_t)*addr;
 
    int flags = VM_FLAGS_ANYWHERE;
    if (dst_addr)
@@ -110,19 +122,19 @@ kk_bo_map_placed(struct kk_device *dev, struct kk_bo *bo, void **addr)
    vm_prot_t cur_prot;
    vm_prot_t max_prot;
 
-   /* Metal provides us with its own CPU mapping of the memory. mach_vm_remap
+   /* Metal provides us with its own CPU mapping of the memory. kk_vm_remap
     * allows us to create a second mapping pointing to that same memory, placed
     * wherever the caller requests. Note that this is used even without a fixed
     * address, since we need a unique mapping to support reserved unmap. */
-   kern_return_t ret = mach_vm_remap(mach_task_self(), &dst_addr, bo->size_B, 0,
-                                     flags, mach_task_self(), src_addr, false,
-                                     &cur_prot, &max_prot, VM_INHERIT_DEFAULT);
+   kern_return_t ret = kk_vm_remap(mach_task_self(), &dst_addr, bo->size_B, 0,
+                                   flags, mach_task_self(), src_addr, false,
+                                   &cur_prot, &max_prot, VM_INHERIT_DEFAULT);
    if (ret != KERN_SUCCESS)
       return vk_errorf(dev, VK_ERROR_MEMORY_MAP_FAILED,
-                       "mach_vm_remap failed: %d", ret);
+                       "kk_vm_remap failed: %d", ret);
 
    *addr = (void *)dst_addr;
-#endif /* DETECT_OS_APPLE && TARGET_OS_OSX */
+#endif /* DETECT_OS_APPLE */
 
    return VK_SUCCESS;
 }
@@ -130,23 +142,23 @@ kk_bo_map_placed(struct kk_device *dev, struct kk_bo *bo, void **addr)
 VkResult
 kk_bo_unmap(struct kk_device *dev, struct kk_bo *bo, void *addr, bool reserved)
 {
-#if DETECT_OS_APPLE && TARGET_OS_OSX
-   mach_vm_address_t unmap_addr = (mach_vm_address_t)addr;
+#if DETECT_OS_APPLE
+   kk_vm_addr_t unmap_addr = (kk_vm_addr_t)addr;
    if (reserved) {
-      /* Replace with a reserved mapping using mach_vm_map */
-      kern_return_t ret = mach_vm_map(
+      /* Replace with a reserved mapping using vm_map */
+      kern_return_t ret = kk_vm_map(
          mach_task_self(), &unmap_addr, bo->size_B, 0,
          VM_FLAGS_FIXED | VM_FLAGS_OVERWRITE, MEMORY_OBJECT_NULL, 0, false,
          VM_PROT_NONE, VM_PROT_READ | VM_PROT_WRITE, VM_INHERIT_DEFAULT);
       if (ret != KERN_SUCCESS)
          return vk_errorf(dev, VK_ERROR_MEMORY_MAP_FAILED,
-                          "mach_vm_map failed: %d", ret);
+                          "kk_vm_map failed: %d", ret);
    } else {
       /* According to spec, we can only return a fail code here if the reserve
        * flag is set, so ignore the result */
-      mach_vm_deallocate(mach_task_self(), unmap_addr, bo->size_B);
+      kk_vm_deallocate(mach_task_self(), unmap_addr, bo->size_B);
    }
-#endif /* DETECT_OS_APPLE && TARGET_OS_OSX */
+#endif /* DETECT_OS_APPLE */
 
    return VK_SUCCESS;
 }
