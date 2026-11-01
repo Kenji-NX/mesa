@@ -69,7 +69,11 @@ if with_platform_windows
   vulkan_wsi_list += '-DVK_USE_PLATFORM_WIN32_KHR'
 endif
 if with_platform_macos
-  vulkan_wsi_list += '-DVK_USE_PLATFORM_MACOS_MVK'
+  if with_subsys_ios
+    vulkan_wsi_list += '-DVK_USE_PLATFORM_IOS_MVK'
+  else
+    vulkan_wsi_list += '-DVK_USE_PLATFORM_MACOS_MVK'
+  endif
   vulkan_wsi_list += '-DVK_USE_PLATFORM_METAL_EXT'
   vulkan_wsi_deps += dependency(
     'appleframeworks',
